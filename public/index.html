@@ -29,6 +29,7 @@
         <div><p id="today" class="date-label"></p><h1 id="heading" tabindex="-1">All tasks</h1></div>
         <button id="add" class="primary add"></button>
       </header>
+      <button id="reload-app" type="button" hidden>Update available · Reload</button>
       <div id="content"></div>
     </main>
   </div>
@@ -45,13 +46,16 @@
         <label>Repeat<select name="repeat"><option value="0">Never</option><option value="1">Every day</option><option value="2">Every other day</option></select></label>
       </div>
       <div class="schedule">
-        <label><span id="date-label">Date</span><input name="date" type="date"></label>
         <div>
-          <button id="time-toggle" class="time-toggle" type="button" aria-pressed="false">Time</button>
+          <button id="date-toggle" class="schedule-toggle" type="button" aria-pressed="false">Date</button>
+          <input name="date" type="date" aria-label="Scheduled date">
+        </div>
+        <div>
+          <button id="time-toggle" class="schedule-toggle" type="button" aria-pressed="false">Time</button>
           <input name="time" type="time" aria-label="Scheduled time">
         </div>
       </div>
-      <footer><button type="button" data-close>Cancel</button><button class="primary" type="submit">Save task</button></footer>
+      <footer><button id="delete-task" class="delete-task" type="button" hidden>Delete</button><button type="button" data-close>Cancel</button><button class="primary" type="submit">Save task</button></footer>
     </form>
   </dialog>
   <dialog id="picker" aria-labelledby="picker-heading">

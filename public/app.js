@@ -34,6 +34,7 @@ let sort = 'importance';
 let knownDay = dateKey();
 let week = weekStart(knownDay);
 let editing = null;
+let dateOn = false;
 let timeOn = false;
 let exportFile;
 let downloadUrl;
@@ -160,6 +161,18 @@ function restore(task) {
   }))) notify('Task restored');
 }
 
+function deleteTask(task, rule = false) {
+  if (!confirm('Permanently delete “' + task.title + '”?')) return false;
+  const saved = update(current => {
+    if (rule) return { ...current, rules: current.rules.filter(item => item.id !== task.id) };
+    const tasks = current.tasks.filter(item => item.id !== task.id);
+    const skipped = task.ruleId ? [...new Set([...(current.skipped || []), task.id])] : current.skipped;
+    return { ...current, tasks, skipped };
+  });
+  if (saved) notify('Task deleted');
+  return saved;
+}
+
 function taskRow(task, { weekRow = false, trash = false } = {}) {
   const row = element('div', 'task' + (task.completed ? ' done' : ''));
   const details = [task.duration + ' min'];
@@ -179,7 +192,10 @@ function taskRow(task, { weekRow = false, trash = false } = {}) {
   const rank = element('span', 'badge' + (task.importance >= 4 ? ' high' : ''), task.importance);
   rank.setAttribute('aria-label', 'Importance ' + task.importance + ' of 5');
   row.append(title, rank);
-  if (trash) row.append(button('Restore ' + task.title, () => restore(task), { icon: 'restore', iconOnly: true, className: 'icon-button' }));
+  if (trash) row.append(
+    button('Restore ' + task.title, () => restore(task), { icon: 'restore', iconOnly: true, className: 'icon-button' }),
+    button('Delete ' + task.title, () => deleteTask(task), { icon: 'trash', iconOnly: true, className: 'icon-button' })
+  );
   return row;
 }
 
@@ -311,11 +327,13 @@ function openPicker(day) {
   picker.showModal();
 }
 
-function renderTime() {
+function renderSchedule() {
+  $('#date-toggle').setAttribute('aria-pressed', String(dateOn));
+  fields.date.disabled = !dateOn;
+  fields.date.required = dateOn;
   $('#time-toggle').setAttribute('aria-pressed', String(timeOn));
   fields.time.disabled = !timeOn;
   fields.time.required = timeOn;
-  fields.date.required = timeOn;
 }
 
 function openEditor(task = null, date = '', rule = false) {
@@ -330,31 +348,44 @@ function openEditor(task = null, date = '', rule = false) {
   fields.repeat.options[0].disabled = rule;
   fields.repeat.value = rule ? task.repeat : !task && view === 'recurring' ? 1 : 0;
   $('#repeat-field').hidden = Boolean(task && !rule);
-  fields.date.value = date || (rule ? task.start : task?.date) || '';
+  fields.date.value = date || (rule && task.explicitStart !== false ? task.start : task?.date) || '';
+  dateOn = Boolean(fields.date.value);
   fields.time.value = task?.time || '';
-  timeOn = Boolean(fields.time.value);
+  timeOn = dateOn && Boolean(fields.time.value);
+  $('#delete-task').hidden = !task;
   updateDateLabel();
-  renderTime();
+  renderSchedule();
   editor.showModal();
-  if (task) fields.date.focus();
+  if (task) (dateOn ? fields.date : $('#date-toggle')).focus();
   else fields.title.focus();
 }
 
 function updateDateLabel() {
   const recurring = fields.repeat.value !== '0';
-  $('#date-label').textContent = recurring ? 'Start date' : 'Date';
+  $('#date-toggle').textContent = recurring ? 'Start date' : 'Date';
   fields.date.min = recurring ? '' : dateKey();
 }
 
 fields.repeat.addEventListener('change', updateDateLabel);
 fields.title.addEventListener('input', () => fields.title.setCustomValidity(''));
+$('#delete-task').addEventListener('click', () => {
+  if (deleteTask(editing.task, editing.rule)) editor.close();
+});
+$('#date-toggle').addEventListener('click', () => {
+  dateOn = !dateOn;
+  if (dateOn) fields.date.value ||= dateKey();
+  else timeOn = false;
+  renderSchedule();
+  if (dateOn) fields.date.focus();
+});
 $('#time-toggle').addEventListener('click', () => {
   timeOn = !timeOn;
   if (timeOn) {
+    dateOn = true;
     fields.date.value ||= dateKey();
     fields.time.value ||= '09:00';
   }
-  renderTime();
+  renderSchedule();
   if (timeOn) fields.time.focus();
 });
 
@@ -374,15 +405,15 @@ form.addEventListener('submit', event => {
     time: timeOn ? fields.time.value : ''
   };
   const id = task?.id || crypto.randomUUID();
-  const date = fields.date.value;
+  const date = dateOn ? fields.date.value : '';
   const saved = update(current => {
     if (!task && repeat) {
-      return { ...current, rules: [...current.rules, { id, ...values, repeat, start: date || dateKey(), enabled: true }] };
+      return { ...current, rules: [...current.rules, { id, ...values, repeat, start: date || dateKey(), explicitStart: dateOn, enabled: true }] };
     }
     if (rule) {
       const latest = current.rules.find(item => item.id === id);
       return { ...current, rules: current.rules.map(item => item.id === id
-        ? { ...latest, ...values, repeat: repeat || latest.repeat, start: date || latest.start, checkedThrough: undefined }
+        ? { ...latest, ...values, repeat: repeat || latest.repeat, start: date || (latest.explicitStart === false ? latest.start : dateKey()), explicitStart: dateOn, checkedThrough: undefined }
         : item) };
     }
     const latest = current.tasks.find(item => item.id === id) || task;
@@ -455,5 +486,15 @@ setInterval(() => {
   if (knownDay !== dateKey()) refresh({ reload: true });
 }, 15000);
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => notify('Offline caching is unavailable.'));
+  let controlled = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (controlled) $('#reload-app').hidden = false;
+    controlled = true;
+  });
+  $('#reload-app').addEventListener('click', () => location.reload());
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(registration => {
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) registration.update().catch(() => {});
+    });
+  }).catch(() => notify('Offline caching is unavailable.'));
 }

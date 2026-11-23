@@ -99,12 +99,12 @@ dialog::backdrop { background: #16281e66; }
 form, dialog label { display: grid; gap: 6px; }
 form { gap: 13px; }
 form .dialog-heading { margin-bottom: 0; }
-dialog label, .time-toggle { font-size: .875rem; font-weight: 650; }
+dialog label, .schedule-toggle { font-size: .875rem; font-weight: 650; }
 dialog input, dialog textarea, dialog select { font-size: 1rem; font-weight: 400; }
 textarea { resize: vertical; }
 .fields, .schedule { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.time-toggle { display: block; min-height: 0; margin-bottom: 6px; padding: 0; border: 0; text-decoration: underline; text-underline-offset: 3px; }
-.time-toggle[aria-pressed="false"], input:disabled { color: #68746c; }
+.schedule-toggle { display: block; min-height: 0; margin-bottom: 6px; padding: 0; border: 0; text-decoration: underline; text-underline-offset: 3px; }
+.schedule-toggle[aria-pressed="false"], input:disabled { color: #68746c; }
 input:disabled { background: var(--surface); }
 footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 .share-actions { flex-wrap: wrap; margin-bottom: 14px; }
@@ -130,3 +130,6 @@ a[download] { color: var(--green); text-decoration: none; display: inline-flex; 
 #pick-list { display: grid; gap: 7px; }
 .pick-task { text-align: left; overflow-wrap: anywhere; }
 .pick-task svg { margin-right: 5px; }
+
+.delete-task { margin-right: auto; color: #943b29; }
+#reload-app { margin-bottom: 13px; }

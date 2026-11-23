@@ -1,12 +1,15 @@
 const prefix = 'daylist-shell:' + self.registration.scope + ':';
-const cacheName = prefix + '1';
+const cacheName = prefix + '2';
 const shell = [
   './index.html', './styles.css', './app.js', './model.mjs', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './icon-maskable.png'
 ].map(path => new URL(path, self.registration.scope).href);
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(cacheName).then(cache => cache.addAll(shell.map(url => new Request(url, { cache: 'reload' })))));
+  const requests = shell.map(url => new Request(url, { cache: 'reload' }));
+  event.waitUntil(caches.open(cacheName)
+    .then(cache => cache.addAll(requests))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {

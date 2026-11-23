@@ -34,7 +34,7 @@ export function reconcile(state, today) {
     }
     return task;
   });
-  const ids = new Set(tasks.map(task => task.id));
+  const ids = new Set([...tasks.map(task => task.id), ...(state.skipped || [])]);
   const rules = state.rules.map(rule => {
     if (!rule.enabled || rule.checkedThrough === today) return rule;
     const nextDay = rule.checkedThrough && rule.checkedThrough < today
@@ -50,7 +50,7 @@ export function reconcile(state, today) {
 }
 
 export function weekTasks(state, start, today) {
-  const ids = new Set(state.tasks.map(task => task.id));
+  const ids = new Set([...state.tasks.map(task => task.id), ...(state.skipped || [])]);
   const tasks = state.tasks.filter(task => task.date >= start && task.date <= shiftDay(start, 6));
   for (let i = 0; i < 7; i++) {
     const day = shiftDay(start, i);
