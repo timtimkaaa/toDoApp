@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Version offline cache
         run: sed -i "s/const cacheName = prefix + '1';/const cacheName = prefix + '${GITHUB_SHA}';/" public/sw.js
       - name: Upload site
