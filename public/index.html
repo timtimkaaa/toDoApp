@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f6f2">
+  <meta name="description" content="A simple offline task list and weekly planner.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+  <title>Daylist</title>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><img src="./icon-192.png" alt="" width="34" height="34"> Daylist</div>
+      <nav aria-label="Workspace">
+        <button data-view="tasks">All tasks</button>
+        <button data-view="week">Weekly plan</button>
+        <button data-view="recurring">Recurring</button>
+        <button data-view="trash">Trash</button>
+      </nav>
+      <button id="export" class="export">Export &amp; share</button>
+    </aside>
+    <main>
+      <header class="page-header">
+        <div><p id="today" class="date-label"></p><h1 id="heading" tabindex="-1">All tasks</h1></div>
+        <button id="add" class="primary add"></button>
+      </header>
+      <div id="content"></div>
+    </main>
+  </div>
+  <dialog id="editor" aria-labelledby="editor-heading">
+    <form id="task-form">
+      <div class="dialog-heading"><h2 id="editor-heading"></h2><button type="button" data-close aria-label="Close"></button></div>
+      <label>Task<input name="title" required maxlength="160" placeholder="What needs doing?"></label>
+      <label>Description<textarea name="description" rows="2" maxlength="4000" placeholder="Add details"></textarea></label>
+      <div class="fields">
+        <label>Importance<select name="importance"><option value="1">1 · Low</option><option value="2">2</option><option value="3">3 · Normal</option><option value="4">4</option><option value="5">5 · High</option></select></label>
+        <label>Duration (minutes)<input name="duration" type="number" min="1" max="1440" required></label>
+      </div>
+      <div id="repeat-field">
+        <label>Repeat<select name="repeat"><option value="0">Never</option><option value="1">Every day</option><option value="2">Every other day</option></select></label>
+      </div>
+      <div class="schedule">
+        <label><span id="date-label">Date</span><input name="date" type="date"></label>
+        <div>
+          <button id="time-toggle" class="time-toggle" type="button" aria-pressed="false">Time</button>
+          <input name="time" type="time" aria-label="Scheduled time">
+        </div>
+      </div>
+      <footer><button type="button" data-close>Cancel</button><button class="primary" type="submit">Save task</button></footer>
+    </form>
+  </dialog>
+  <dialog id="picker" aria-labelledby="picker-heading">
+    <div class="dialog-heading"><h2 id="picker-heading">Assign a task</h2><button type="button" data-close aria-label="Close"></button></div>
+    <div id="pick-list"></div>
+  </dialog>
+  <dialog id="share" aria-labelledby="share-heading">
+    <div class="dialog-heading"><h2 id="share-heading">Export &amp; share</h2><button type="button" data-close aria-label="Close"></button></div>
+    <div class="share-actions"><button id="csv" type="button">Share CSV</button><a id="download" download="daylist.csv">Download CSV</a></div>
+    <label><span id="prompt-label">Gemini prompt</span><textarea id="prompt" rows="7" readonly></textarea></label>
+    <footer><button id="copy" type="button" class="primary">Copy prompt</button></footer>
+    <p id="share-status" role="status"></p>
+  </dialog>
+  <p id="status" class="toast" role="status"></p>
+</body>
+</html>
